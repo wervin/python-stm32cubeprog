@@ -163,7 +163,7 @@ class CubeProgrammerApi():
                  address:int,
                  skip_erase:bool,
                  verify:bool) -> CubeProgrammerError:
-        return self.dll.donwloadFile(os.path.abspath(path),
+        return self.dll.downloadFile(os.path.abspath(path),
                                      address,
                                      int(skip_erase),
                                      int(verify),
@@ -205,7 +205,7 @@ class CubeProgrammerApi():
 
     @staticmethod
     def _log_message(type, message) -> None:
-        pass
+        print(message)
 
     @staticmethod
     def _set_progessbar(current, total) -> None:

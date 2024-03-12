@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "python-stm32cubeprog"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Vincent Werner", email="vincent.werner@outlook.fr"},
 ]
@@ -29,5 +29,9 @@ dependencies = [
 exclude = [
   ".env",
   ".gitignore",
-  "examples"
+  "examples",
+  "dist"
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["stm32cubeprog"]
