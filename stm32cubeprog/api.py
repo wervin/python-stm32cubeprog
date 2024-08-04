@@ -357,7 +357,7 @@ class CubeProgrammerApi():
         if status != 0:
             raise CubeProgrammerError(status)
         
-    def start_fuse(self) -> None:
+    def start_fus(self) -> None:
         status = self.dll.startFus()
         if not status:
             raise CubeProgrammerError(status)
