@@ -356,7 +356,10 @@ class CubeProgrammerApi():
         status = self.dll.reset(mode)
         if status != 0:
             raise CubeProgrammerError(status)
-        
+
+    def connected(self) -> bool:
+        return self.dll.checkDeviceConnection() == 1
+    
     def start_fus(self) -> None:
         status = self.dll.startFus()
         if not status:
