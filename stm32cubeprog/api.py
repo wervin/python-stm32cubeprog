@@ -348,6 +348,11 @@ class CubeProgrammerApi():
         status = self.dll.writeCortexRegistres(register, data)
         if status != 0:
             raise CubeProgrammerError(status)
+
+    def write_option_bytes(self, cmd:str) -> None:
+        status = self.dll.sendOptionBytesCmd(cmd.encode('utf-8'))
+        if status != 0:
+            raise CubeProgrammerError(status)
     
     def disconnect(self) -> None:
         self.dll.disconnect()
