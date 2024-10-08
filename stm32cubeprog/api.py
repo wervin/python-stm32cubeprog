@@ -66,6 +66,12 @@ class CubeProgrammerRegister(enum.IntEnum):
     LR = 14
     PC = 15
 
+class CubeProgrammerFusCksKeyType(enum.IntEnum):
+    DEFAULT = 0,
+    CLEAR = 1,
+    MASTER = 2,
+    ENCRYPTED = 3
+
 class CubeProgrammerConnectionMode(enum.IntEnum):
     NORMAL = 0
     HOTPLUG = 1
@@ -367,6 +373,49 @@ class CubeProgrammerApi():
     
     def start_fus(self) -> None:
         status = self.dll.startFus()
+        if not status:
+            raise CubeProgrammerError(status)
+        
+    def delete_firmware(self) -> None:
+        status = self.dll.firmwareDelete()
+        if not status:
+            raise CubeProgrammerError(status)
+        
+    def upgrade_firmware(self, 
+                         path: str,
+                         address: int, 
+                         first_install: bool, 
+                         verify: bool) -> None:
+        status = self.dll.firmwareUpgrade(os.path.abspath(path),
+                                     address,
+                                     int(first_install),
+                                     int(0),
+                                     int(verify))
+        if not status:
+            raise CubeProgrammerError(status)
+        
+    def start_wireless_stack(self) -> None:
+        status = self.dll.startWirelessStack()
+        if not status:
+            raise CubeProgrammerError(status)
+        
+    def update_authentication_key(self, path:str) -> None:
+        status = self.dll.updateAuthKey(os.path.abspath(path))
+        if not status:
+            raise CubeProgrammerError(status)
+
+    def lock_authentication_key(self) -> None:
+        status = self.dll.authKeyLock()
+        if not status:
+            raise CubeProgrammerError(status)
+
+    def write_user_key(self, path:str, key_type: CubeProgrammerFusCksKeyType) -> None:
+        status = self.dll.writeUserKey(path, int(key_type))
+        if not status:
+            raise CubeProgrammerError(status)
+
+    def enable_antirollback(self) -> None:
+        status = self.dll.antiRollBack()
         if not status:
             raise CubeProgrammerError(status)
 
