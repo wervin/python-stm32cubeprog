@@ -89,6 +89,16 @@ class DisplayCallbacks(ctypes.Structure):
                 ("log_message", ctypes.CFUNCTYPE(None, ctypes.c_int32, ctypes.c_wchar_p)),
                 ("set_progressbar", ctypes.CFUNCTYPE(None, ctypes.c_int32, ctypes.c_int32))]
     
+class DfuDeviceInfo(ctypes.Structure):
+    _fields_ = [
+        ("usb_index", ctypes.c_char * 10),
+        ("bus_number", ctypes.c_int),
+        ("address_number", ctypes.c_int),
+        ("product_id", ctypes.c_char * 100),
+        ("serial_number", ctypes.c_char * 100),
+        ("dfu_version", ctypes.c_uint)
+    ]
+
 class DebugConnectParameters(ctypes.Structure):
     _fields_ = [("debug_port", ctypes.c_int32),
                 ("index", ctypes.c_int32),
@@ -139,6 +149,42 @@ class CubeProgrammerTargetInfo():
     def revision_id(self) -> str:
         return self.target_info_parameters.revision_id.decode('utf-8')
     
+class CubeProgrammerDfu:
+    def __init__(self, dfu_device_info: DfuDeviceInfo) -> None:
+        self.dfu_device_info = copy.deepcopy(dfu_device_info)
+
+    @property
+    def usb_index(self) -> str:
+        return self.dfu_device_info.usb_index.decode('utf-8')
+    
+    @property
+    def bus_number(self) -> int:
+        return self.dfu_device_info.bus_number
+    
+    @property
+    def address_number(self) -> int:
+        return self.dfu_device_info.address_number
+    
+    @property
+    def product_id(self) -> str:
+        return self.dfu_device_info.product_id.decode('utf-8')
+    
+    @property
+    def serial_number(self) -> str:
+        return self.dfu_device_info.serial_number.decode('utf-8')
+    
+    @property
+    def dfu_version(self) -> int:
+        return self.dfu_device_info.dfu_version
+    
+    def __str__(self) -> str:
+        return f'USB Index: {self.usb_index}\n'\
+               f'Bus Number: {self.bus_number}\n'\
+               f'Address Number: {self.address_number}\n'\
+               f'Product ID: {self.product_id}\n'\
+               f'Serial Number: {self.serial_number}\n'\
+               f'DFU Version: {self.dfu_version}\n'
+
 class CubeProgrammerSTLink():
 
     def __init__(self, debug_connect_parameters:DebugConnectParameters) -> None:
@@ -292,23 +338,46 @@ class CubeProgrammerApi():
         self.dll.writeCortexRegistres.restype = ctypes.c_int32
         self.dll.reset.restype = ctypes.c_int32
 
-    def probe(self) -> list[CubeProgrammerSTLink]:
-        debug_connect_parameters = ctypes.POINTER(DebugConnectParameters)()
-        stlink_count = self.dll.getStLinkEnumerationList(ctypes.byref(debug_connect_parameters), 0)
-        stlinks = [CubeProgrammerSTLink(debug_connect_parameters[i]) for i in range(stlink_count)]
-        return stlinks
-    
-    def find(self) -> list[CubeProgrammerSTLink]:
-        debug_connect_parameters = ctypes.POINTER(DebugConnectParameters)()
-        stlink_count = self.dll.getStLinkList(ctypes.byref(debug_connect_parameters), 0)
-        stlinks = [CubeProgrammerSTLink(debug_connect_parameters[i]) for i in range(stlink_count)]
-        return stlinks
-    
-    def connect(self, stlink:CubeProgrammerSTLink) -> None:
-        status = self.dll.connectStLink(stlink.debug_connect_parameters)
-        if status != 0:
-            raise CubeProgrammerError(status)
-    
+        self.stlink = CubeProgrammerApi.STLink(self.dll)
+        self.dfu = CubeProgrammerApi.Dfu(self.dll)
+
+
+    class STLink():
+        def __init__(self, dll: ctypes.CDLL) -> None:
+            self.dll = dll
+
+        def probe(self) -> list[CubeProgrammerSTLink]:
+            debug_connect_parameters = ctypes.POINTER(DebugConnectParameters)()
+            stlink_count = self.dll.getStLinkEnumerationList(ctypes.byref(debug_connect_parameters), 0)
+            stlinks = [CubeProgrammerSTLink(debug_connect_parameters[i]) for i in range(stlink_count)]
+            return stlinks
+        
+        def find(self) -> list[CubeProgrammerSTLink]:
+            debug_connect_parameters = ctypes.POINTER(DebugConnectParameters)()
+            stlink_count = self.dll.getStLinkList(ctypes.byref(debug_connect_parameters), 0)
+            stlinks = [CubeProgrammerSTLink(debug_connect_parameters[i]) for i in range(stlink_count)]
+            return stlinks
+        
+        def connect(self, stlink:CubeProgrammerSTLink) -> None:
+            status = self.dll.connectStLink(stlink.debug_connect_parameters)
+            if status != 0:
+                raise CubeProgrammerError(status)
+            
+    class Dfu():
+        def __init__(self, dll: ctypes.CDLL) -> None:
+            self.dll = dll
+
+        def probe(self) -> list[CubeProgrammerDfu]:
+            dfu_device_infos = ctypes.POINTER(DfuDeviceInfo)()
+            dfu_count = self.dll.getDfuDeviceList(ctypes.byref(dfu_device_infos), 0xdf11, 0x0483)
+            dfus = [CubeProgrammerDfu(dfu_device_infos[i]) for i in range(dfu_count)]
+            return dfus
+        
+        def connect(self, dfu:CubeProgrammerDfu) -> None:
+            status = self.dll.connectDfuBootloader(dfu.dfu_device_info.usb_index)
+            if status != 0:
+                raise CubeProgrammerError(status)
+
     def download(self,
                  path:str,
                  address:int,
