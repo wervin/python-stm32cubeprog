@@ -308,7 +308,7 @@ class CubeProgrammerApi():
     
     def __init__(self, path:str) -> None:
         if 'Linux' in platform.system():
-            dll_path = os.path.abspath(rf'{path}/api/lib/libCubeProgrammer_API.so')
+            dll_path = os.path.abspath(rf'{path}/lib/libCubeProgrammer_API.so')
             flashloader_path = os.path.abspath(rf'{path}/bin')
         elif 'Window' in platform.system():
             dll_path = os.path.abspath(rf'{path}/api/lib/CubeProgrammer_API.dll')
