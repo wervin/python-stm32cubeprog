@@ -12,7 +12,7 @@ description = "Python API for STM32CubeProgrammer"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-license-files = ["LICEN[CS]E*"]
+license-files = ["LICENSE"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
