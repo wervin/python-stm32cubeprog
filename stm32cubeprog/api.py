@@ -399,6 +399,12 @@ class CubeProgrammerApi():
         status = self.dll.massErase()
         if status != 0:
             raise CubeProgrammerError(status)
+        
+    def sector_erase(self, sectors: list[int]) -> None:
+        c_sectors = (ctypes.c_uint * len(sectors))(*sectors)
+        status = self.dll.sectorErase(c_sectors, len(sectors), 0)
+        if status != 0:
+            raise CubeProgrammerError(status)
     
     def read_memory(self, address:int, size:int) -> bytes:
         buffer = ctypes.POINTER(ctypes.c_ubyte)()
